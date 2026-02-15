@@ -98,7 +98,7 @@ function sendRaw(obj) {
 
 function rpcCall(method, params = {}) {
   const id = generateUUID();
-  const payload = { id, method, params };
+  const payload = { type: 'req', id, method, params };
   sendRaw(payload);
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
