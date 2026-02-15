@@ -67,8 +67,8 @@ function saveSettings() {
 }
 
 function encodeMessage(obj) {
-  const json = JSON.stringify(obj);
-  return new TextEncoder().encode(json);
+  // Gateway expects text frames, not binary
+  return JSON.stringify(obj);
 }
 
 function decodeMessage(data) {
@@ -168,7 +168,7 @@ async function connect() {
   connectSent = false;
   setStatus('connecting');
   ws = new WebSocket(url);
-  ws.binaryType = 'arraybuffer';
+  // Note: Gateway sends text frames, we send text frames (JSON.stringify)
 
   ws.onopen = () => {
     retryCount = 0;
