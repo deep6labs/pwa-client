@@ -1,0 +1,27 @@
+{
+  "version": "1.0",
+  "default": "local-gateway-jet",
+  "connections": [
+    {
+      "id": "local-gateway-jet",
+      "name": "Local Gateway (Jet)",
+      "url": "ws://192.168.1.19:11112",
+      "token": "Yh3uR2p6Q9vM7tC1nX8aL4eS5kJ0wB2fG6zH9dP3",
+      "notes": "Primary gateway on Jetson device (192.168.1.19:11112)"
+    },
+    {
+      "id": "localhost-dev",
+      "name": "Localhost (localhost:11112)",
+      "url": "ws://localhost:11112",
+      "token": "Yh3uR2p6Q9vM7tC1nX8aL4eS5kJ0wB2fG6zH9dP3",
+      "notes": "Same gateway, accessed via localhost"
+    },
+    {
+      "id": "dev-server",
+      "name": "Dev Server (localhost:3000)",
+      "url": "ws://localhost:3000",
+      "token": "",
+      "notes": "Development server for testing"
+    }
+  ]
+}
