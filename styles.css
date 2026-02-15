@@ -121,6 +121,21 @@ textarea { min-height: 64px; resize: vertical; }
 }
 #helpBtn { min-width: 32px; font-weight: 600; }
 
+/* Slash command autocomplete */
+.slash-suggest {
+  position: absolute; bottom: 100%; left: 0; right: 80px;
+  background: var(--panel); border: 1px solid #1f2937;
+  border-radius: 6px; margin-bottom: 4px;
+  max-height: 200px; overflow-y: auto; z-index: 50;
+}
+.slash-suggest.hidden { display: none; }
+.slash-item {
+  padding: 8px 12px; cursor: pointer; font-size: 0.9rem;
+  border-bottom: 1px solid #1f2937;
+}
+.slash-item:last-child { border-bottom: none; }
+.slash-item:hover, .slash-item.active { background: #1f2937; }
+
 .modal {
   position: fixed; inset: 0; background: rgba(0,0,0,0.6);
   display: flex; align-items: center; justify-content: center;

@@ -472,10 +472,74 @@ sendBtn.onclick = async () => {
   await sendChatMessage(text);
 };
 
+// Slash command autocomplete
+const COMMANDS = ['help', 'model', 'models', 'session', 'sessions', 'agent', 'agents', 'status', 'reset', 'abort'];
+let slashSuggest = null;
+
+function createSlashSuggest() {
+  if (slashSuggest) return;
+  slashSuggest = document.createElement('div');
+  slashSuggest.className = 'slash-suggest hidden';
+  chatInput.parentElement.style.position = 'relative';
+  chatInput.parentElement.appendChild(slashSuggest);
+}
+
+function showSlashSuggest(val) {
+  if (!slashSuggest) createSlashSuggest();
+  if (!val.startsWith('/')) { slashSuggest.classList.add('hidden'); return; }
+  const term = val.slice(1).toLowerCase();
+  const matches = COMMANDS.filter(c => c.startsWith(term));
+  if (!matches.length) { slashSuggest.classList.add('hidden'); return; }
+  slashSuggest.innerHTML = matches.map(c => `<div class="slash-item" data-cmd="${c}">/${c}</div>`).join('');
+  slashSuggest.classList.remove('hidden');
+  slashSuggest.querySelectorAll('.slash-item').forEach(el => {
+    el.onclick = () => { chatInput.value = '/' + el.dataset.cmd + ' '; chatInput.focus(); slashSuggest.classList.add('hidden'); };
+  });
+}
+
+chatInput.addEventListener('input', () => showSlashSuggest(chatInput.value));
 chatInput.addEventListener('keydown', async (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
+    slashSuggest?.classList.add('hidden');
     sendBtn.click();
+    return;
+  }
+  if (e.key === 'Escape') {
+    slashSuggest?.classList.add('hidden');
+    return;
+  }
+  // Arrow navigation for slash suggest
+  const items = slashSuggest?.querySelectorAll('.slash-item');
+  if (!items || slashSuggest.classList.contains('hidden')) return;
+  const active = slashSuggest.querySelector('.slash-item.active');
+  let idx = active ? [...items].indexOf(active) : -1;
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    items.forEach(i => i.classList.remove('active'));
+    idx = Math.min(idx + 1, items.length - 1);
+    items[idx]?.classList.add('active');
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    items.forEach(i => i.classList.remove('active'));
+    idx = Math.max(idx - 1, 0);
+    items[idx]?.classList.add('active');
+  } else if (e.key === 'Enter' && active) {
+    e.preventDefault();
+    active.click();
+  } else if (e.key === 'Tab' && items[0]) {
+    e.preventDefault();
+    items[0].click();
+  }
+});
+
+// Global "/" key to focus composer
+document.addEventListener('keydown', (e) => {
+  if (e.key === '/' && document.activeElement !== chatInput && document.activeElement !== modalSearch) {
+    e.preventDefault();
+    chatInput.focus();
+    chatInput.value = '/';
+    showSlashSuggest('/');
   }
 });
 
