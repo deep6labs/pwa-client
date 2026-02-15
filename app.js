@@ -98,13 +98,13 @@ function sendRaw(obj) {
 
 function rpcCall(method, params = {}) {
   const id = generateUUID();
-  const payload = { type: 'req', id, method, params };
+  const payload = { id, method, params };
   sendRaw(payload);
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       pending.delete(id);
       reject(new Error('RPC timeout'));
-    }, 30000);
+    }, 45000);
     pending.set(id, { resolve, reject, timeout });
   });
 }
@@ -214,15 +214,26 @@ async function connect() {
       return;
     }
 
-    // Handle connect response
-    if ((data.type === 'res' || data.type === undefined) && data.id && data.ok) {
-      if (data.payload?.type === 'hello-ok' || data.payload?.protocol) {
-        connected = true;
-        setStatus('connected');
-        connectBtn.disabled = true;
-        disconnectBtn.disabled = false;
-        addMessage('system', 'Connected to gateway.');
-        return;
+    // Handle hello/helloOk or connect response
+    if (data.event === 'helloOk') {
+      connected = true;
+      setStatus('connected');
+      connectBtn.disabled = true;
+      disconnectBtn.disabled = false;
+      addMessage('system', 'Connected to gateway.');
+      return;
+    }
+    if ((data.type === 'res' || data.type === undefined) && data.id) {
+      const connectPayload = data.result || data.payload;
+      if (data.ok === true || connectPayload) {
+        if (connectPayload?.type === 'hello-ok' || connectPayload?.protocol) {
+          connected = true;
+          setStatus('connected');
+          connectBtn.disabled = true;
+          disconnectBtn.disabled = false;
+          addMessage('system', 'Connected to gateway.');
+          return;
+        }
       }
     }
 
@@ -233,14 +244,20 @@ async function connect() {
       return;
     }
 
-    // Handle pending RPC responses
-    if (data.id && typeof data.ok === 'boolean') {
+    // Handle pending RPC responses (supports result/error or ok/payload)
+    if (data.id && (typeof data.ok === 'boolean' || data.result !== undefined || data.error !== undefined)) {
       const entry = pending.get(data.id);
       if (!entry) return;
       clearTimeout(entry.timeout);
       pending.delete(data.id);
-      if (!data.ok) entry.reject(data.error || new Error('RPC failed'));
-      else entry.resolve(data.payload);
+      if (typeof data.ok === 'boolean') {
+        if (!data.ok) entry.reject(data.error || new Error('RPC failed'));
+        else entry.resolve(data.payload);
+      } else if (data.error) {
+        entry.reject(data.error || new Error('RPC failed'));
+      } else {
+        entry.resolve(data.result);
+      }
       return;
     }
 
@@ -292,6 +309,10 @@ async function sendChatMessage(content) {
   if (!currentSession) {
     await loadSessions(true);
   }
+  if (!currentSession) {
+    addMessage('system', 'No active session. Use /sessions to pick one.');
+    return;
+  }
   addMessage('user', content);
   typingEl.classList.remove('hidden');
   const params = {
@@ -314,6 +335,10 @@ async function loadSessions(pickFirst = false) {
     if (pickFirst && sessions.length) {
       currentSession = sessions[0].key;
       sessionLabel.textContent = sessions[0].displayName || sessions[0].derivedTitle || sessions[0].key;
+    } else if (pickFirst && !sessions.length) {
+      currentSession = null;
+      sessionLabel.textContent = 'none';
+      addMessage('system', 'No sessions available.');
     }
     return sessions;
   } catch (err) {
