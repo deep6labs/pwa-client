@@ -20,6 +20,8 @@ const modalSearch = $('#modalSearch');
 const modalList = $('#modalList');
 const modalClose = $('#modalClose');
 
+const STORAGE_KEY = 'pwa-client-settings';
+
 let ws = null;
 let connected = false;
 let manualClose = false;
@@ -38,6 +40,30 @@ function setStatus(state) {
 
 function showError(msg) {
   errorText.textContent = msg || '';
+}
+
+function loadSettings() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const data = JSON.parse(raw);
+    if (data.wsUrl) wsUrlEl.value = data.wsUrl;
+    if (data.wsToken) wsTokenEl.value = data.wsToken;
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function saveSettings() {
+  try {
+    const data = {
+      wsUrl: wsUrlEl.value.trim(),
+      wsToken: wsTokenEl.value.trim()
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    // ignore storage errors
+  }
 }
 
 function encodeMessage(obj) {
@@ -63,7 +89,7 @@ function sendRaw(obj) {
 
 function rpcCall(method, params = {}) {
   const id = crypto.randomUUID();
-  const payload = { id, method, params };
+  const payload = { type: 'req', id, method, params };
   sendRaw(payload);
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
@@ -131,6 +157,7 @@ async function connect() {
   showError('');
   const baseUrl = wsUrlEl.value.trim();
   if (!baseUrl) return showError('URL required');
+  saveSettings();
   let url = baseUrl;
   const token = wsTokenEl.value.trim();
   if (token && !url.includes('token=')) {
@@ -148,12 +175,13 @@ async function connect() {
     // Wait for connect.challenge before sending connect
   };
 
-  ws.onclose = () => {
+  ws.onclose = (e) => {
     connected = false;
     connectSent = false;
     setStatus('offline');
     connectBtn.disabled = false;
     disconnectBtn.disabled = true;
+    if (e && e.reason) showError(`Disconnected: ${e.reason}`);
     if (!manualClose) scheduleReconnect();
   };
 
@@ -176,7 +204,7 @@ async function connect() {
     }
 
     // Handle connect response
-    if (data.type === 'res' && data.id && data.result?.connected) {
+    if ((data.type === 'res' || data.type === undefined) && data.id && data.result?.connected) {
       connected = true;
       setStatus('connected');
       connectBtn.disabled = true;
@@ -186,14 +214,14 @@ async function connect() {
     }
 
     // Handle errors from connect
-    if (data.type === 'res' && data.id && data.error) {
+    if ((data.type === 'res' || data.type === undefined) && data.id && data.error) {
       showError(`Auth failed: ${data.error.message || data.error}`);
       disconnect();
       return;
     }
 
     // Handle pending RPC responses
-    if (data.id) {
+    if (data.id && (data.result !== undefined || data.error !== undefined)) {
       const entry = pending.get(data.id);
       if (!entry) return;
       clearTimeout(entry.timeout);
@@ -225,7 +253,6 @@ function sendConnect() {
     },
     role: 'operator',
     scopes: ['operator.admin'],
-    caps: ['chat', 'sessions', 'models'],
     auth: token ? { token } : undefined,
     nonce: connectNonce
   };
@@ -351,7 +378,7 @@ async function handleSlash(cmd) {
   const arg = rest.join(' ').trim();
   switch (base) {
     case '/help':
-      addMessage('system', 'Commands: /help /model [id] /models /session [key] /sessions /agent [id] /agents /status /reset /abort');
+      $('#helpPanel').classList.remove('hidden');
       break;
     case '/model':
       if (!arg) {
@@ -423,6 +450,20 @@ disconnectBtn.onclick = () => disconnect();
 modalClose.onclick = () => closeModal();
 modal.onclick = (e) => { if (e.target === modal) closeModal(); };
 
+// Help panel
+const helpBtn = $('#helpBtn');
+const helpPanel = $('#helpPanel');
+const helpClose = $('#helpClose');
+helpBtn.onclick = () => { helpPanel.classList.toggle('hidden'); };
+helpClose.onclick = () => { helpPanel.classList.add('hidden'); };
+document.addEventListener('click', (e) => {
+  if (!helpPanel.classList.contains('hidden') && 
+      !helpPanel.contains(e.target) && 
+      e.target !== helpBtn) {
+    helpPanel.classList.add('hidden');
+  }
+});
+
 sendBtn.onclick = async () => {
   const text = chatInput.value.trim();
   if (!text) return;
@@ -442,4 +483,5 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
 
+loadSettings();
 setStatus('offline');

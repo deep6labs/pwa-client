@@ -45,8 +45,30 @@
       <div id="messages" class="messages"></div>
       <div id="typing" class="typing hidden">Thinking…</div>
       <div class="composer">
-        <textarea id="chatInput" placeholder="Type a message. Enter to send, Shift+Enter for newline"></textarea>
+        <textarea id="chatInput" placeholder="Type a message. Enter to send, Shift+Enter for newline. Type /help for commands."></textarea>
         <button id="sendBtn">Send</button>
+        <button id="helpBtn" class="secondary" title="Show commands">?</button>
+      </div>
+    </section>
+
+    <section id="helpPanel" class="help-panel hidden">
+      <div class="help-header">
+        <h3>Slash Commands</h3>
+        <button id="helpClose">×</button>
+      </div>
+      <div class="help-content">
+        <table class="commands-table">
+          <tr><td><code>/help</code></td><td>Show this help</td></tr>
+          <tr><td><code>/model [id]</code></td><td>Show or set model</td></tr>
+          <tr><td><code>/models</code></td><td>Open model picker</td></tr>
+          <tr><td><code>/session [key]</code></td><td>Show or set session</td></tr>
+          <tr><td><code>/sessions</code></td><td>Open session picker</td></tr>
+          <tr><td><code>/agent [id]</code></td><td>Show or set agent</td></tr>
+          <tr><td><code>/agents</code></td><td>Open agent picker</td></tr>
+          <tr><td><code>/status</code></td><td>Show gateway status</td></tr>
+          <tr><td><code>/reset</code></td><td>Reset current session</td></tr>
+          <tr><td><code>/abort</code></td><td>Cancel generation</td></tr>
+        </table>
       </div>
     </section>
   </div>
