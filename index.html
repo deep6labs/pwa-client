@@ -14,6 +14,12 @@
   <div id="app">
     <header class="topbar">
       <div class="brand">PWA Chat Gateway</div>
+      <div class="picker-bar">
+        <div class="clickable" id="sessionPicker">Session: <span id="sessionLabel">none</span></div>
+        <div class="clickable" id="modelPicker">Model: <span id="modelLabel">default</span></div>
+        <div class="clickable" id="agentPicker">Agent: <span id="agentLabel">default</span></div>
+        <div class="clickable" id="contextPicker">📚 <span id="contextLabel">0/0 (0%)</span></div>
+      </div>
       <div class="status">
         <span id="connIndicator" class="dot offline"></span>
         <span id="connText">offline</span>
@@ -23,7 +29,7 @@
     <section class="panel">
       <div class="row">
         <label>URL</label>
-        <input id="wsUrl" type="text" placeholder="ws://localhost:3000" value="ws://192.168.1.19:11112" />
+        <input id="wsUrl" type="text" placeholder="ws://localhost:3000" value="ws://192.168.1.19:11111" />
       </div>
       <div class="row">
         <label>Token</label>
@@ -33,11 +39,6 @@
         <button id="connectBtn">Connect</button>
         <button id="disconnectBtn" class="secondary" disabled>Disconnect</button>
         <span id="errorText" class="error"></span>
-      </div>
-      <div class="row meta">
-        <div>Session: <span id="sessionLabel">none</span></div>
-        <div>Model: <span id="modelLabel">default</span></div>
-        <div>Agent: <span id="agentLabel">default</span></div>
       </div>
     </section>
 

@@ -36,8 +36,9 @@ ws.onmessage = (event) => {
         minProtocol: 3,
         maxProtocol: 3,
         client: { id: 'test-bot', version: '1.0.0' },
-        caps: ['chat'],
+        caps: ['chat', 'sessions', 'models', 'agents'],
         role: 'operator',
+        scopes: ['operator.read', 'operator.write', 'operator.admin'],
         auth: { token: TOKEN },
         nonce: nonce
       }

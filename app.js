@@ -10,9 +10,13 @@ const connText = $('#connText');
 const errorText = $('#errorText');
 const chatInput = $('#chatInput');
 const sendBtn = $('#sendBtn');
+const sessionPicker = $('#sessionPicker');
 const sessionLabel = $('#sessionLabel');
+const modelPicker = $('#modelPicker');
 const modelLabel = $('#modelLabel');
+const agentPicker = $('#agentPicker');
 const agentLabel = $('#agentLabel');
+const contextLabel = $('#contextLabel');
 
 const modal = $('#modal');
 const modalTitle = $('#modalTitle');
@@ -137,6 +141,7 @@ function updateStreaming(runId, delta, done) {
   if (done) {
     streamMap.delete(runId);
     typingEl.classList.add('hidden');
+    loadSessions(true); // Refresh tokens after message
   }
 }
 
@@ -284,7 +289,7 @@ function sendConnect() {
     },
     caps: ['chat', 'sessions', 'models', 'agents'],
     role: 'operator',
-    scopes: ['operator.admin'],
+    scopes: ['operator.read', 'operator.write', 'operator.admin'],
     auth: token ? { token } : undefined
   };
   sendRaw({ type: 'req', method: 'connect', id: generateUUID(), params });
@@ -328,16 +333,31 @@ async function sendChatMessage(content) {
   }
 }
 
+function formatTokens(n) {
+  if (!n) return '0';
+  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'm';
+  if (n >= 1000) return (n / 1000).toFixed(0) + 'k';
+  return n.toString();
+}
+
 async function loadSessions(pickFirst = false) {
   try {
     const res = await rpcCall('sessions.list', { limit: 20, includeDerivedTitles: true, includeLastMessage: true });
     const sessions = res.sessions || [];
     if (pickFirst && sessions.length) {
-      currentSession = sessions[0].key;
-      sessionLabel.textContent = sessions[0].displayName || sessions[0].derivedTitle || sessions[0].key;
+      const s = sessions.find(x => x.key === currentSession) || sessions[0];
+      currentSession = s.key;
+      sessionLabel.textContent = s.displayName || s.derivedTitle || s.key;
+      modelLabel.textContent = s.model || 'default';
+      
+      const used = s.totalTokens || 0;
+      const total = s.contextTokens || 0;
+      const pct = total ? Math.round((used / total) * 100) : 0;
+      contextLabel.textContent = `${formatTokens(used)}/${formatTokens(total)} (${pct}%)`;
     } else if (pickFirst && !sessions.length) {
       currentSession = null;
       sessionLabel.textContent = 'none';
+      contextLabel.textContent = '0/0 (0%)';
       addMessage('system', 'No sessions available.');
     }
     return sessions;
@@ -486,6 +506,9 @@ async function handleSlash(cmd) {
 
 connectBtn.onclick = () => connect();
 disconnectBtn.onclick = () => disconnect();
+sessionPicker.onclick = () => handleSlash('/sessions');
+modelPicker.onclick = () => handleSlash('/models');
+agentPicker.onclick = () => handleSlash('/agents');
 modalClose.onclick = () => closeModal();
 modal.onclick = (e) => { if (e.target === modal) closeModal(); };
 

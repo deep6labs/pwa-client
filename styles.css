@@ -27,8 +27,24 @@ body {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 .brand { font-weight: 700; font-size: 1.1rem; }
+.picker-bar {
+  display: flex;
+  gap: 16px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.clickable {
+  cursor: pointer;
+  padding: 4px 8px;
+  background: #1f2937;
+  border-radius: 4px;
+}
+.clickable:hover { background: #334155; color: var(--text); }
+.clickable span { color: var(--text); font-weight: 600; }
 .status { display: flex; align-items: center; gap: 8px; }
 .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .dot.offline { background: #64748b; }
