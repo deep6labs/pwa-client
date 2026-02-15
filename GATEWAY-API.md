@@ -12,10 +12,10 @@ ws://{host}:{port}?token={authToken}
 
 **Default local:** `ws://localhost:11112`
 
-**Your current Gateway:**
-- Port: `11112`
+**Your current Gateway (Jet):**
+- URL: `ws://192.168.1.19:11112`
 - Token: `Yh3uR2p6Q9vM7tC1nX8aL4eS5kJ0wB2fG6zH9dP3`
-- Full URL: `ws://192.168.1.XXX:11112?token=Yh3uR2p6Q9vM7tC1nX8aL4eS5kJ0wB2fG6zH9dP3`
+- Full URL: `ws://192.168.1.19:11112?token=Yh3uR2p6Q9vM7tC1nX8aL4eS5kJ0wB2fG6zH9dP3`
 
 ---
 

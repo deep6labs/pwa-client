@@ -1,13 +1,15 @@
 # PWA WebSocket Chat Gateway Client
 
-A lightweight Progressive Web App client for the WebSocket chat gateway.
+A lightweight Progressive Web App client for the OpenClaw WebSocket chat gateway.
+
+**Repository:** https://github.com/deep6labs/pwa-client
 
 ## Run locally
 
 Serve the folder with any static server:
 
 ```bash
-cd /home/asha/workspace/pwa-client
+cd /home/asha/repos/pwa-client
 python3 -m http.server 8080
 ```
 
