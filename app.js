@@ -21,6 +21,7 @@ const modalList = $('#modalList');
 const modalClose = $('#modalClose');
 
 const STORAGE_KEY = 'pwa-client-settings';
+const PROTOCOL_VERSION = 3;
 
 let ws = null;
 let connected = false;
@@ -206,30 +207,32 @@ async function connect() {
     }
 
     // Handle connect response
-    if ((data.type === 'res' || data.type === undefined) && data.id && data.result?.connected) {
-      connected = true;
-      setStatus('connected');
-      connectBtn.disabled = true;
-      disconnectBtn.disabled = false;
-      addMessage('system', 'Connected to gateway.');
-      return;
+    if ((data.type === 'res' || data.type === undefined) && data.id && data.ok) {
+      if (data.payload?.type === 'hello-ok' || data.payload?.protocol) {
+        connected = true;
+        setStatus('connected');
+        connectBtn.disabled = true;
+        disconnectBtn.disabled = false;
+        addMessage('system', 'Connected to gateway.');
+        return;
+      }
     }
 
     // Handle errors from connect
-    if ((data.type === 'res' || data.type === undefined) && data.id && data.error) {
-      showError(`Auth failed: ${data.error.message || data.error}`);
+    if ((data.type === 'res' || data.type === undefined) && data.id && (data.ok === false || data.error)) {
+      showError(`Auth failed: ${data.error?.message || data.error || 'connect failed'}`);
       disconnect();
       return;
     }
 
     // Handle pending RPC responses
-    if (data.id && (data.result !== undefined || data.error !== undefined)) {
+    if (data.id && typeof data.ok === 'boolean') {
       const entry = pending.get(data.id);
       if (!entry) return;
       clearTimeout(entry.timeout);
       pending.delete(data.id);
-      if (data.error) entry.reject(data.error);
-      else entry.resolve(data.result);
+      if (!data.ok) entry.reject(data.error || new Error('RPC failed'));
+      else entry.resolve(data.payload);
       return;
     }
 
@@ -245,19 +248,19 @@ function sendConnect() {
   connectSent = true;
   const token = wsTokenEl.value.trim();
   const params = {
-    minProtocol: 1,
-    maxProtocol: 1,
+    minProtocol: PROTOCOL_VERSION,
+    maxProtocol: PROTOCOL_VERSION,
     client: {
-      id: 'pwa-client',
+      id: 'webchat-ui',
+      displayName: 'PWA Client',
       version: '1.0.0',
       platform: 'web',
-      mode: 'frontend'
+      mode: 'webchat'
     },
     caps: ['chat', 'sessions', 'models', 'agents'],
     role: 'operator',
     scopes: ['operator.admin'],
-    auth: token ? { token } : undefined,
-    nonce: connectNonce
+    auth: token ? { token } : undefined
   };
   sendRaw({ type: 'req', method: 'connect', id: crypto.randomUUID(), params });
 }
