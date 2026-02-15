@@ -187,14 +187,16 @@ async function connect() {
 
   ws.onerror = (e) => {
     showError('WebSocket error');
-    console.error(e);
+    console.error('WebSocket error:', e);
   };
 
   ws.onmessage = async (msg) => {
     const text = await decodeMessage(msg.data);
+    console.log('WS received:', text);
     if (!text) return;
     let data;
     try { data = JSON.parse(text); } catch { return; }
+    console.log('WS parsed:', data);
 
     // Handle connect challenge
     if (data.event === 'connect.challenge' && data.payload?.nonce) {
