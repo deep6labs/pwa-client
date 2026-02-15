@@ -23,6 +23,14 @@ const modalClose = $('#modalClose');
 const STORAGE_KEY = 'pwa-client-settings';
 const PROTOCOL_VERSION = 3;
 
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 let ws = null;
 let connected = false;
 let manualClose = false;
@@ -89,7 +97,7 @@ function sendRaw(obj) {
 }
 
 function rpcCall(method, params = {}) {
-  const id = crypto.randomUUID();
+  const id = generateUUID();
   const payload = { type: 'req', id, method, params };
   sendRaw(payload);
   return new Promise((resolve, reject) => {
@@ -262,7 +270,7 @@ function sendConnect() {
     scopes: ['operator.admin'],
     auth: token ? { token } : undefined
   };
-  sendRaw({ type: 'req', method: 'connect', id: crypto.randomUUID(), params });
+  sendRaw({ type: 'req', method: 'connect', id: generateUUID(), params });
 }
 
 function disconnect() {
