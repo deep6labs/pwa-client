@@ -251,6 +251,7 @@ function sendConnect() {
       platform: 'web',
       mode: 'frontend'
     },
+    caps: ['chat', 'sessions', 'models', 'agents'],
     role: 'operator',
     scopes: ['operator.admin'],
     auth: token ? { token } : undefined,
